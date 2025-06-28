@@ -9,20 +9,29 @@
 
   <style>
     body {
-      background: linear-gradient(to bottom right, #0f172a, #1e293b); /* bluish blackish */
+      background: linear-gradient(to bottom right, #0f172a, #1e293b);
       overflow-x: hidden;
     }
 
     .bg-icon {
       position: absolute;
-      opacity: 0.05;
+      opacity: 0.04;
       width: 100px;
-      animation: float 10s ease-in-out infinite;
+      animation: float 12s ease-in-out infinite;
     }
 
     @keyframes float {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-20px); }
+    }
+
+    .tab-btn.active {
+      background-color: #2563eb;
+      color: white;
+    }
+
+    .tab-btn {
+      transition: 0.3s;
     }
   </style>
 </head>
@@ -33,16 +42,23 @@
   <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/File_icon.svg" class="bg-icon top-40 right-20" />
   <img src="https://upload.wikimedia.org/wikipedia/commons/1/18/Cryptocurrency_wallet_icon.svg" class="bg-icon bottom-20 left-32" />
 
-  <!-- Card UI -->
-  <div class="bg-white bg-opacity-10 backdrop-blur-md border border-white border-opacity-10 shadow-xl rounded-2xl max-w-xl w-full p-6 animate__animated animate__fadeInDown">
-    <h1 class="text-2xl font-bold text-center text-blue-300 mb-6">🔐 Upload & Verify Document</h1>
+  <!-- Main Card -->
+  <div class="bg-white bg-opacity-10 backdrop-blur-md border border-white border-opacity-10 shadow-2xl rounded-2xl max-w-xl w-full p-6 animate__animated animate__fadeInDown">
+    <h1 class="text-3xl font-bold text-center text-blue-300 mb-6">🔐 Blockchain File Verifier</h1>
 
-    <form id="uploadForm" class="space-y-4" enctype="multipart/form-data" method="post" action="/upload">
+    <!-- Tab Buttons -->
+    <div class="flex justify-center gap-4 mb-6">
+      <button id="uploadTab" class="tab-btn px-4 py-2 rounded-xl bg-blue-500 text-white">Upload</button>
+      <button id="verifyTab" class="tab-btn px-4 py-2 rounded-xl text-blue-200 hover:bg-blue-500 hover:text-white">Verify</button>
+    </div>
+
+    <!-- Upload Form -->
+    <form id="uploadForm" class="space-y-4 tab-content" enctype="multipart/form-data" method="post" action="/upload">
       <input
         type="file"
         name="document"
         required
-        class="block w-full text-sm text-white file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-200 file:text-blue-900 hover:file:bg-blue-300 bg-opacity-20"
+        class="block w-full text-sm text-white file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-200 file:text-blue-900 hover:file:bg-blue-300"
       />
       <button
         type="submit"
@@ -52,26 +68,79 @@
       </button>
     </form>
 
+    <!-- Verify Form -->
+    <form id="verifyForm" class="space-y-4 tab-content hidden" enctype="multipart/form-data" method="post" action="/verify">
+      <input
+        type="file"
+        name="document"
+        required
+        class="block w-full text-sm text-white file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-green-200 file:text-green-900 hover:file:bg-green-300"
+      />
+      <button
+        type="submit"
+        class="w-full bg-green-600 text-white py-2 rounded-xl shadow-lg hover:bg-green-700 transition duration-300"
+      >
+        ✅ Verify File
+      </button>
+    </form>
+
+    <!-- Output -->
     <div id="result" class="mt-6 text-sm text-white"></div>
   </div>
 
+  <!-- Script -->
   <script>
-    const form = document.getElementById("uploadForm");
+    const uploadTab = document.getElementById("uploadTab");
+    const verifyTab = document.getElementById("verifyTab");
+    const uploadForm = document.getElementById("uploadForm");
+    const verifyForm = document.getElementById("verifyForm");
     const result = document.getElementById("result");
 
-    form.addEventListener("submit", async (e) => {
+    // Switch tabs
+    uploadTab.addEventListener("click", () => {
+      uploadForm.classList.remove("hidden");
+      verifyForm.classList.add("hidden");
+      uploadTab.classList.add("active");
+      verifyTab.classList.remove("active");
+      result.innerHTML = "";
+    });
+
+    verifyTab.addEventListener("click", () => {
+      uploadForm.classList.add("hidden");
+      verifyForm.classList.remove("hidden");
+      verifyTab.classList.add("active");
+      uploadTab.classList.remove("active");
+      result.innerHTML = "";
+    });
+
+    // Handle Upload
+    uploadForm.addEventListener("submit", async (e) => {
       e.preventDefault();
+      const formData = new FormData(uploadForm);
+      result.innerHTML = "⏳ Uploading to IPFS...";
 
-      const formData = new FormData(form);
-      result.innerHTML = "⏳ Uploading and verifying file...";
-
-      const response = await fetch("/upload", {
+      const res = await fetch("/upload", {
         method: "POST",
         body: formData,
       });
 
-      const text = await response.text();
+      const text = await res.text();
       result.innerHTML = `<div class="mt-4 p-4 bg-green-200 text-green-900 rounded-xl shadow-md animate__animated animate__fadeIn">${text}</div>`;
+    });
+
+    // Handle Verify
+    verifyForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData(verifyForm);
+      result.innerHTML = "🔍 Verifying file...";
+
+      const res = await fetch("/verify", {
+        method: "POST",
+        body: formData,
+      });
+
+      const text = await res.text();
+      result.innerHTML = `<div class="mt-4 p-4 bg-yellow-100 text-gray-900 rounded-xl shadow-md animate__animated animate__fadeIn">${text}</div>`;
     });
   </script>
 </body>

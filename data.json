@@ -48,5 +48,21 @@
     },
     "sha256": "03e84b0663303c57ad1535e9f1d3feb20174d91f289c2c0a2a9ab9a490441262",
     "timestamp": "2025-06-28T07:51:09.779Z"
+  },
+  {
+    "filename": "One View by AKTU SDC Team.pdf",
+    "ipfsHash": {
+      "IpfsHash": "QmZvYv8G2ifeBvEN2HqUcwHtLQP9Dtm6ptc76zh488jTfj",
+      "PinSize": 304858,
+      "Timestamp": "2025-06-28T13:54:35.795Z",
+      "ID": "aea33cd5-a3eb-4330-83a5-f12a47c8766e",
+      "Name": "1751118908780-One View by AKTU SDC Team.pdf",
+      "NumberOfFiles": 1,
+      "MimeType": "application/pdf",
+      "GroupId": null,
+      "Keyvalues": null
+    },
+    "sha256": "2c384e5a6586fee9448b1e3882ca25bd71ae91ea66b6dd4617d4992675846dd0",
+    "timestamp": "2025-06-28T13:55:12.242Z"
   }
 ]

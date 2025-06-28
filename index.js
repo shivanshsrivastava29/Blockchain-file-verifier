@@ -8,22 +8,22 @@ const uploadToIPFS = require("./ipfsUploader");
 const app = express();
 const PORT = 3000;
 
-// Serve frontend
+// Serve static frontend files
 app.use(express.static("public"));
 app.use(express.json());
 
-// Multer setup
+// Multer config for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
   filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
 });
 const upload = multer({ storage: storage });
 
-// Upload endpoint
+// 🔼 Upload Route
 app.post("/upload", upload.single("document"), async (req, res) => {
   const filePath = req.file.path;
 
-  // Hash the file
+  // Generate SHA-256 hash
   const fileBuffer = fs.readFileSync(filePath);
   const hash = crypto.createHash("sha256").update(fileBuffer).digest("hex");
 
@@ -31,7 +31,7 @@ app.post("/upload", upload.single("document"), async (req, res) => {
   const ipfsURL = await uploadToIPFS(filePath);
   if (!ipfsURL) return res.status(500).send("Failed to upload to IPFS");
 
-  // Store in data.json
+  // Prepare record
   const record = {
     filename: req.file.originalname,
     ipfsHash: ipfsURL,
@@ -39,17 +39,51 @@ app.post("/upload", upload.single("document"), async (req, res) => {
     timestamp: new Date().toISOString(),
   };
 
-  const existingData = JSON.parse(fs.readFileSync("data.json", "utf-8"));
+  // Append to data.json
+  const dataPath = path.join(__dirname, "data.json");
+  const existingData = JSON.parse(fs.readFileSync(dataPath, "utf-8"));
   existingData.push(record);
-  fs.writeFileSync("data.json", JSON.stringify(existingData, null, 2));
+  fs.writeFileSync(dataPath, JSON.stringify(existingData, null, 2));
 
-  // Delete uploaded file from local storage
-  //fs.unlinkSync(filePath);
+  // Optionally delete local file
+  // fs.unlinkSync(filePath);
 
-  res.send(`✅ Uploaded to IPFS: <a href="${ipfsURL}" target="_blank">${ipfsURL}</a><br>SHA-256: ${hash}`);
+  // Send response
+  res.send(`✅ Uploaded to IPFS: <a href="${ipfsURL.IpfsHash ? `https://gateway.pinata.cloud/ipfs/${ipfsURL.IpfsHash}` : ipfsURL}" target="_blank">${ipfsURL.IpfsHash || ipfsURL}</a><br>SHA-256: ${hash}`);
 });
 
-// Start server
+// 🧐 Verify Route
+app.post("/verify", upload.single("document"), (req, res) => {
+  const filePath = req.file.path;
+
+  // Calculate file hash
+  const fileBuffer = fs.readFileSync(filePath);
+  const hash = crypto.createHash("sha256").update(fileBuffer).digest("hex");
+
+  // Load records
+  const dataPath = path.join(__dirname, "data.json");
+  const existingData = JSON.parse(fs.readFileSync(dataPath, "utf-8"));
+  const match = existingData.find((record) => record.sha256 === hash);
+
+  // Delete uploaded file
+  fs.unlinkSync(filePath);
+
+  // Send verification result
+  if (match) {
+    res.send(`
+      ✅ <strong>File is verified!</strong><br>
+      SHA-256: <code>${hash}</code><br>
+      IPFS CID: <a href="https://gateway.pinata.cloud/ipfs/${match.ipfsHash.IpfsHash || match.ipfsHash}" target="_blank">${match.ipfsHash.IpfsHash || match.ipfsHash}</a>
+    `);
+  } else {
+    res.send(`
+      ❌ <strong>File not found or has been altered.</strong><br>
+      SHA-256: <code>${hash}</code>
+    `);
+  }
+});
+
+// 🚀 Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
