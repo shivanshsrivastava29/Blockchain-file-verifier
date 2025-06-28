@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Blockchain File Verifier</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+  <style>
+    body {
+      background: linear-gradient(to bottom right, #0f172a, #1e293b); /* bluish blackish */
+      overflow-x: hidden;
+    }
+
+    .bg-icon {
+      position: absolute;
+      opacity: 0.05;
+      width: 100px;
+      animation: float 10s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+  </style>
+</head>
+<body class="relative min-h-screen flex flex-col items-center justify-center px-4 text-white">
+
+  <!-- Floating Background Emojis -->
+  <img src="https://upload.wikimedia.org/wikipedia/commons/0/01/Chain_link_icon.svg" class="bg-icon top-10 left-10" />
+  <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/File_icon.svg" class="bg-icon top-40 right-20" />
+  <img src="https://upload.wikimedia.org/wikipedia/commons/1/18/Cryptocurrency_wallet_icon.svg" class="bg-icon bottom-20 left-32" />
+
+  <!-- Card UI -->
+  <div class="bg-white bg-opacity-10 backdrop-blur-md border border-white border-opacity-10 shadow-xl rounded-2xl max-w-xl w-full p-6 animate__animated animate__fadeInDown">
+    <h1 class="text-2xl font-bold text-center text-blue-300 mb-6">🔐 Upload & Verify Document</h1>
+
+    <form id="uploadForm" class="space-y-4" enctype="multipart/form-data" method="post" action="/upload">
+      <input
+        type="file"
+        name="document"
+        required
+        class="block w-full text-sm text-white file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-200 file:text-blue-900 hover:file:bg-blue-300 bg-opacity-20"
+      />
+      <button
+        type="submit"
+        class="w-full bg-blue-600 text-white py-2 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300"
+      >
+        🚀 Upload to IPFS
+      </button>
+    </form>
+
+    <div id="result" class="mt-6 text-sm text-white"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById("uploadForm");
+    const result = document.getElementById("result");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      result.innerHTML = "⏳ Uploading and verifying file...";
+
+      const response = await fetch("/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const text = await response.text();
+      result.innerHTML = `<div class="mt-4 p-4 bg-green-200 text-green-900 rounded-xl shadow-md animate__animated animate__fadeIn">${text}</div>`;
+    });
+  </script>
+</body>
+</html>
